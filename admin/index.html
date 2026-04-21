@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuietWizard Admin</title>
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="https://cdn.quilljs.com/1.3.7/quill.snow.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script>
+  window.sb = supabase.createClient(
+    'https://hdqnjmfxnbezlqbdyqvj.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkcW5qbWZ4bmJlemxxYmR5cXZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NzY4NDEsImV4cCI6MjA5MjM1Mjg0MX0.iJQvCwfBncUG0PCzjo37_qa7ZHd-Ld7yFE52B06QtPA'
+  );
+  window.adminStyles = {
+    btnPrimary:   { height:34,padding:'0 16px',background:'#1E5FD4',color:'#F5F8FF',border:'none',borderRadius:4,fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'Space Grotesk,sans-serif',display:'inline-flex',alignItems:'center' },
+    btnSecondary: { height:34,padding:'0 14px',background:'transparent',color:'#C8D5E4',border:'1px solid #253652',borderRadius:4,fontSize:13,fontWeight:500,cursor:'pointer',fontFamily:'Space Grotesk,sans-serif',display:'inline-flex',alignItems:'center' },
+    btnGhost:     { height:34,padding:'0 14px',background:'transparent',color:'#7590AF',border:'1px solid transparent',borderRadius:4,fontSize:13,cursor:'pointer',fontFamily:'Space Grotesk,sans-serif',display:'inline-flex',alignItems:'center' },
+    btnDanger:    { height:34,padding:'0 12px',background:'rgba(240,82,82,.1)',color:'#F05252',border:'1px solid rgba(240,82,82,.25)',borderRadius:4,fontSize:12,fontWeight:500,cursor:'pointer',fontFamily:'Space Grotesk,sans-serif',display:'inline-flex',alignItems:'center' },
+    input:        { width:'100%',height:36,background:'#07090F',border:'1px solid #1C2B44',borderRadius:4,padding:'0 12px',fontSize:13,color:'#E8EEF8',outline:'none',fontFamily:'Space Grotesk,sans-serif',transition:'border-color 200ms' },
+    empty:        { fontSize:13,color:'#4F6A8F',padding:'40px 0',textAlign:'center' },
+    emptyCard:    { background:'#0D1220',border:'1px solid #1C2B44',borderRadius:6,padding:'48px 32px',textAlign:'center' },
+  };
+</script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="Auth.jsx"></script>
+<script type="text/babel" src="Sidebar.jsx"></script>
+<script type="text/babel" src="ArticlesList.jsx"></script>
+<script type="text/babel" src="ArticleEditor.jsx"></script>
+<script type="text/babel" src="ServicesEditor.jsx"></script>
+<script type="text/babel" src="SettingsEditor.jsx"></script>
+<script type="text/babel" src="ContactSubmissions.jsx"></script>
+<script type="text/babel">
+
+const App = () => {
+  const [session, setSession] = React.useState(undefined);
+  const [page, setPage] = React.useState(() => localStorage.getItem('qws_admin_page') || 'articles');
+  const [editingArticleId, setEditingArticleId] = React.useState(null);
+  const [isNewArticle, setIsNewArticle] = React.useState(false);
+  const [unreadCount, setUnreadCount] = React.useState(0);
+
+  React.useEffect(() => {
+    window.sb.auth.getSession().then(({ data: { session } }) => setSession(session));
+    const { data: { subscription } } = window.sb.auth.onAuthStateChange((_e, session) => setSession(session));
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const navTo = (p) => { setPage(p); setEditingArticleId(null); setIsNewArticle(false); localStorage.setItem('qws_admin_page', p); };
+
+  if (session === undefined) return <div style={{ minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center' }}><div style={{ fontFamily:'Space Grotesk,sans-serif',fontSize:13,color:'#344D6E' }}>Loading…</div></div>;
+  if (!session) return <Auth />;
+
+  const renderContent = () => {
+    if (page === 'articles') {
+      if (isNewArticle) return <ArticleEditor articleId={null} onBack={() => { setIsNewArticle(false); }} />;
+      if (editingArticleId) return <ArticleEditor articleId={editingArticleId} onBack={() => setEditingArticleId(null)} />;
+      return <ArticlesList onEdit={id => setEditingArticleId(id)} onNew={() => setIsNewArticle(true)} />;
+    }
+    if (page === 'services') return <ServicesEditor />;
+    if (page === 'settings') return <SettingsEditor />;
+    if (page === 'contact')  return <ContactSubmissions onCountChange={setUnreadCount} />;
+  };
+
+  return (
+    <div style={{ display:'flex',minHeight:'100vh' }}>
+      <Sidebar page={page} setPage={navTo} user={session.user} unreadCount={unreadCount} />
+      <main style={{ marginLeft:220,flex:1,padding:'40px 48px',minHeight:'100vh' }}>
+        {renderContent()}
+      </main>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
