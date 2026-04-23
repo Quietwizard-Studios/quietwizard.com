@@ -1,0 +1,16 @@
+{
+  "[project]/components/HUDBackground.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/components/HUDBackground.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/components_HUDBackground_tsx_0u-j1rs._.js",
+      "static/chunks/components_HUDBackground_tsx_0wwso~.._.js"
+    ]
+  },
+  "[project]/components/Sigil.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/components/Sigil.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/components_Sigil_tsx_09~s7wn._.js",
+      "static/chunks/components_Sigil_tsx_0wwso~.._.js"
+    ]
+  }
+}
