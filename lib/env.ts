@@ -10,8 +10,11 @@ function failMissing(name: string, context: string): never {
 }
 
 export function getOptionalSupabasePublicEnv(context: string) {
-  const url = readEnv("NEXT_PUBLIC_SUPABASE_URL");
-  const anonKey = readEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  // Static property access is required for NEXT_PUBLIC_* vars — Next.js can only
+  // inline them into the client bundle when the identifier is a literal, not a
+  // computed/dynamic key like process.env[someVariable].
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || undefined;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || undefined;
 
   if (!url && !anonKey) return null;
 
@@ -45,7 +48,7 @@ export function getRequiredSupabaseServiceEnv(context: string) {
 }
 
 export function getSiteUrl(context: string) {
-  const configured = readEnv("NEXT_PUBLIC_SITE_URL");
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim() || undefined;
   if (configured) return configured;
 
   if (typeof window !== "undefined" && window.location?.origin) {
